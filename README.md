@@ -9,8 +9,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/visual-studio-marketplace/v/IamAkhilSKumar.void-list-extension?style=flat-square&color=007acc&label=VS%20Code" alt="VS Code Marketplace Version">
-  <img src="https://img.shields.io/visual-studio-marketplace/d/IamAkhilSKumar.void-list-extension?style=flat-square&color=007acc" alt="Downloads">
+  <img src="https://img.shields.io/visual-studio-marketplace/v/akhil-s-kumar.void-list-extension?style=flat-square&color=007acc&label=VS%20Code" alt="VS Code Marketplace Version">
+  <img src="https://img.shields.io/visual-studio-marketplace/d/akhil-s-kumar.void-list-extension?style=flat-square&color=007acc" alt="Downloads">
 </p>
 
 ## ✨ Features
@@ -48,7 +48,7 @@ We believe in a **local-first** approach. Your tasks and snippets are saved loca
 
 ## 🛠️ Development & Contributing
 
-1. Clone the repository: `git clone https://github.com/IamAkhilSKumar/void-list-extension.git`
+1. Clone the repository: `git clone https://github.com/akhil-s-kumar/void-list-extension.git`
 2. Open the folder in VS Code.
 3. Run `npm install`
 4. Press `F5` to start debugging.

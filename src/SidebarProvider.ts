@@ -157,20 +157,37 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     break;
                 }
                 case 'exportData': {
-                    const tasks = this.db.getTasks();
-                    const snippets = this.db.getSnippets();
-                    const data = JSON.stringify({ version: 1, tasks, snippets }, null, 2);
-                    const doc = await vscode.workspace.openTextDocument({ content: data, language: 'json' });
-                    vscode.window.showTextDocument(doc);
+                    try {
+                        const tasks = this.db.getTasks();
+                        const snippets = this.db.getSnippets();
+                        const data = JSON.stringify({ version: 1, tasks, snippets }, null, 2);
+                        
+                        const fileUri = await vscode.window.showSaveDialog({
+                            saveLabel: 'Export JSON',
+                            filters: { 'JSON Files': ['json'] },
+                            defaultUri: vscode.Uri.file('void-list-backup.json')
+                        });
+                        
+                        if (fileUri) {
+                            await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(data));
+                            vscode.window.showInformationMessage('Data exported successfully!');
+                        }
+                    } catch (e: any) {
+                        vscode.window.showErrorMessage('Failed to export data: ' + e.message);
+                    }
                     break;
                 }
                 case 'importData': {
                     try {
-                        const input = await vscode.window.showInputBox({ 
-                            prompt: 'Paste the JSON data to import',
-                            placeHolder: '{"version": 1, "tasks": [...], "snippets": [...]}'
+                        const fileUris = await vscode.window.showOpenDialog({
+                            canSelectMany: false,
+                            openLabel: 'Import JSON',
+                            filters: { 'JSON Files': ['json'] }
                         });
-                        if (input) {
+                        
+                        if (fileUris && fileUris[0]) {
+                            const fileContent = await vscode.workspace.fs.readFile(fileUris[0]);
+                            const input = new TextDecoder().decode(fileContent);
                             const imported = JSON.parse(input);
                             if (imported.tasks) {
                                 imported.tasks.forEach((t: any) => this.db.upsertTask(t));
@@ -178,11 +195,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                             if (imported.snippets) {
                                 imported.snippets.forEach((s: any) => this.db.upsertSnippet(s));
                             }
-                            vscode.window.showInformationMessage('Data imported successfully');
+                            vscode.window.showInformationMessage('Data imported successfully!');
                             this.refresh();
                         }
-                    } catch (e) {
-                        vscode.window.showErrorMessage('Failed to import data: Invalid JSON');
+                    } catch (e: any) {
+                        vscode.window.showErrorMessage('Failed to import data: ' + e.message);
                     }
                     break;
                 }
@@ -380,6 +397,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             overflow: hidden;
         }
 
+        .card.pinned {
+            border-left: 3px solid var(--vscode-charts-yellow, #eab308);
+            background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 179, 8, 0.05));
+        }
+
         .card-header {
             display: flex;
             gap: 8px;
@@ -556,6 +578,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             border: 1px solid var(--vscode-sideBar-border);
         }
 
+        mark {
+            background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 92, 0, 0.33));
+            color: inherit;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
         .badge-urgent { background: #8b5cf6; color: white; }
         .badge-high { background: #ef4444; color: white; }
         .badge-medium { background: #f59e0b; color: white; }
@@ -617,18 +646,48 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     </div>
 
     <div id="settings-view" class="view-container hidden">
-        <div class="section-header" style="font-size: 10px; opacity: 0.5; margin-bottom: 10px;">SYNC & BACKUP</div>
-        <div style="display: grid; gap: 8px;">
-            <button class="action-btn" style="padding: 8px;" onclick="tsvscode.postMessage({type:'importData'})">Import Data (JSON)</button>
-            <button class="action-btn" style="padding: 8px;" onclick="tsvscode.postMessage({type:'exportData'})">Export Data (JSON)</button>
-            <button class="action-btn" style="padding: 8px;" onclick="tsvscode.postMessage({type:'pairDevice'})">Pair Mobile Device</button>
-            <button class="action-btn" style="padding: 8px;" onclick="tsvscode.postMessage({type:'syncNow'})">Manual Sync Now</button>
+        <div class="section-header" style="font-size: 10px; opacity: 0.5; margin-bottom: 10px; padding: 0 5px;">SYNC & BACKUP</div>
+        <div style="display: grid; gap: 8px; padding: 0 5px;">
+            <div class="card" style="cursor: pointer; margin-bottom: 0;" onclick="tsvscode.postMessage({type:'importData'})">
+                <div class="card-header" style="margin-bottom: 4px;">
+                    <div class="title" style="font-weight: 600;">Import Data</div>
+                    <svg class="svg-icon" viewBox="0 0 16 16"><path d="M13 5l-5 5-5-5h3V1h4v4h3zM1 14h14v2H1v-2z"/></svg>
+                </div>
+                <div style="opacity: 0.6; font-size: 11px;">Import your tasks and snippets from a JSON file.</div>
+            </div>
+
+            <div class="card" style="cursor: pointer; margin-bottom: 0;" onclick="tsvscode.postMessage({type:'exportData'})">
+                <div class="card-header" style="margin-bottom: 4px;">
+                    <div class="title" style="font-weight: 600;">Export Data</div>
+                    <svg class="svg-icon" viewBox="0 0 16 16"><path d="M3 11l5-5 5 5h-3v4H6v-4H3zM1 1h14v2H1V1z"/></svg>
+                </div>
+                <div style="opacity: 0.6; font-size: 11px;">Export all your data locally for safekeeping.</div>
+            </div>
+
+            <div class="card" style="cursor: pointer; margin-bottom: 0;" onclick="tsvscode.postMessage({type:'pairDevice'})">
+                <div class="card-header" style="margin-bottom: 4px;">
+                    <div class="title" style="font-weight: 600;">Pair Mobile Device</div>
+                    <svg class="svg-icon" viewBox="0 0 16 16"><path d="M11 1H5C4.4 1 4 1.4 4 2v12c0 .6.4 1 1 1h6c.6 0 1-.4 1-1V2c0-.6-.4-1-1-1zm0 13H5V2h6v12zM7 12h2v1H7v-1z"/></svg>
+                </div>
+                <div style="opacity: 0.6; font-size: 11px;">Sync locally with the mobile app via QR code.</div>
+            </div>
+
+            <div class="card" style="cursor: pointer; margin-bottom: 0;" onclick="tsvscode.postMessage({type:'syncNow'})">
+                <div class="card-header" style="margin-bottom: 4px;">
+                    <div class="title" style="font-weight: 600;">Manual Sync Now</div>
+                    <svg class="svg-icon" viewBox="0 0 16 16"><path d="M11.5 8c0-1.9-1.6-3.5-3.5-3.5-1.4 0-2.6.8-3.1 2H6v1H2V3h1v1.9c.9-1.2 2.3-1.9 3.9-1.9C9.7 3 12.5 5.8 12.5 9h-1zM4.5 8c0 1.9 1.6 3.5 3.5 3.5 1.4 0 2.6-.8 3.1-2H10V8h4v4.5h-1v-1.9c-.9 1.2-2.3 1.9-3.9 1.9C5.3 13 2.5 10.2 2.5 7h1z"/></svg>
+                </div>
+                <div style="opacity: 0.6; font-size: 11px;">Force push your data to paired devices.</div>
+            </div>
         </div>
 
         <div style="margin-top: auto; padding: 30px 5px 20px 5px;">
-            <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.03); border: 1px solid var(--vscode-sideBar-border); border-radius: 8px; margin: 0 5px;">
-                <div style="font-size: 10px; font-weight: bold; opacity: 0.4; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Mobile Experience</div>
-                <p style="font-size: 11px; opacity: 0.7; margin-bottom: 15px; line-height: 1.4;">Keep your tasks in sync across all your devices.</p>
+            <div class="card" style="text-align: center; margin-bottom: 0;">
+                <div class="card-header" style="justify-content: center; margin-bottom: 12px; opacity: 0.8;">
+                    <svg class="svg-icon" viewBox="0 0 16 16" style="width: 16px; height: 16px;"><path d="M11 1H5C4.4 1 4 1.4 4 2v12c0 .6.4 1 1 1h6c.6 0 1-.4 1-1V2c0-.6-.4-1-1-1zm0 13H5V2h6v12zM7 12h2v1H7v-1z"/></svg>
+                    <div style="font-weight: bold; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; align-self: center;">Mobile Experience</div>
+                </div>
+                <p style="font-size: 11px; opacity: 0.7; margin-top: 0; margin-bottom: 15px; line-height: 1.4;">Keep your tasks in sync across all your devices.</p>
                 <a href="https://play.google.com/store/apps/details?id=com.voidlist.app" target="_blank" style="display: inline-block;">
                     <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" style="width: 125px;">
                 </a>
@@ -712,12 +771,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         </div>
     </div>
 
-    <div id="qr-overlay" class="overlay" onclick="this.style.display='none'">
-        <div style="text-align: center; margin-top: 50px;">
-            <div style="background: white; padding: 15px; border-radius: 4px; display: inline-block;">
-                <img id="qr-image" src="">
+    <div id="qr-overlay" class="overlay">
+        <h3 style="margin-top: 0; text-align: center;">Pair Device</h3>
+        <p style="font-size: 11px; opacity: 0.7; text-align: center; margin-bottom: 20px; line-height: 1.4;">Scan this QR code from the Void List mobile app to sync your data locally.</p>
+        <div class="card" style="text-align: center; margin: 0 auto; max-width: 220px; padding: 20px;">
+            <div style="background: white; padding: 10px; border-radius: 4px; display: inline-block; margin-bottom: 15px;">
+                <img id="qr-image" src="" style="display: block;">
             </div>
-            <p style="margin-top: 15px; opacity: 0.8;">Scan with Void List Mobile App</p>
+            <div style="font-size: 11px; font-weight: 600; opacity: 0.9;">Awaiting connection...</div>
+        </div>
+        <div style="display: flex; margin-top: auto; padding-top: 15px;">
+            <button class="action-btn" style="flex: 1; justify-content: center; padding: 8px;" onclick="document.getElementById('qr-overlay').style.display='none'">Close</button>
         </div>
     </div>
 
@@ -890,7 +954,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
         function renderTasks() {
             const container = document.getElementById('tasks-list');
-            const search = document.getElementById('task-search').value.toLowerCase();
+            const rawSearch = document.getElementById('task-search').value;
+            const search = rawSearch.toLowerCase();
             const statusFilter = document.getElementById('filter-status').value;
             const priorityFilter = document.getElementById('filter-priority').value;
 
@@ -930,23 +995,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             };
 
             container.innerHTML = tasks.map(task => {
-                const noteHtml = task.note ? \`<div class="note">\${marked.parse(task.note)}</div>\` : '';
+                const noteRawHtml = task.note ? \`<div class="note">\${marked.parse(task.note)}</div>\` : '';
+                const noteHtml = highlightHtml(noteRawHtml, rawSearch);
+                const titleHtml = highlightText(task.title, rawSearch);
+                const tagsHtml = task.tags.map(t => \`<span class="tag">\${highlightText(t, rawSearch)}</span>\`).join('');
                 const pIcons = { urgent: '!', high: '^', medium: '-', low: 'v' };
                 const pIcon = pIcons[task.priority] || '-';
                 
                 return \`
-                    <div class="card">
+                    <div class="card \${task.is_pinned ? 'pinned' : ''}">
                         <div class="card-header">
                             <div class="status-icon status-\${task.status}" onclick="tsvscode.postMessage({type:'toggleStatus', id:'\${task.id}'})">
                                 \${task.status === 'done' ? '✓' : (task.status === 'in_progress' ? '◑' : '')}
                             </div>
-                            <div class="title">\${task.title}</div>
+                            <div class="title">\${titleHtml}</div>
                             <div class="pin-btn \${task.is_pinned?'active':''}" onclick="tsvscode.postMessage({type:'togglePin', id:'\${task.id}'})">
                                 \${icons.pin}
                             </div>
                         </div>
                         \${noteHtml}
-                        <div class="tags">\${task.tags.map(t => \`<span class="tag">\${t}</span>\`).join('')}</div>
+                        <div class="tags">\${tagsHtml}</div>
                         <div class="meta">
                             <span class="priority-badge badge-\${task.priority}">\${pIcon} \${task.priority}</span>
                             \${task.due_date ? \`<span class="date-info">\${icons.date} \${formatDate(task.due_date)}</span>\` : ''}
@@ -964,7 +1032,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
         function renderSnippets() {
             const container = document.getElementById('snippets-list');
-            const search = document.getElementById('snippet-search').value.toLowerCase();
+            const rawSearch = document.getElementById('snippet-search').value;
+            const search = rawSearch.toLowerCase();
             const filtered = currentSnippets.filter(s => s.title.toLowerCase().includes(search) || s.content.toLowerCase().includes(search));
 
             const icons = {
@@ -977,10 +1046,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <div class="card">
                     <div style="display: flex; flex-direction: column; cursor: pointer;" onclick="const p = this.querySelector('pre'); p.style.display = p.style.display==='none'?'block':'none'">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <b>\${snippet.title}</b>
+                            <b>\${highlightText(snippet.title, rawSearch)}</b>
                             <small style="opacity:0.6">\${snippet.language}</small>
                         </div>
-                        <pre style="display:block; margin-top: 8px;">\${escapeHtml(snippet.content)}</pre>
+                        <pre style="display:block; margin-top: 8px;">\${highlightText(snippet.content, rawSearch)}</pre>
                     </div>
                     <div class="actions">
                         <button class="action-btn" onclick="copySnippet('\${snippet.id}')">\${icons.copy} Copy</button>
@@ -1000,6 +1069,20 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function highlightText(text, search) {
+            if (!text) return '';
+            const escaped = escapeHtml(text);
+            if (!search) return escaped;
+            const regex = new RegExp('(' + search.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&') + ')', 'gi');
+            return escaped.replace(regex, '<mark>$1</mark>');
+        }
+
+        function highlightHtml(html, search) {
+            if (!html || !search) return html;
+            const regex = new RegExp('(?![^<]*>)(' + search.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&') + ')', 'gi');
+            return html.replace(regex, '<mark>$1</mark>');
         }
     </script>
 </body>

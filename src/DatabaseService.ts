@@ -204,7 +204,7 @@ export class DatabaseService {
         const sets = keys.map(k => `${k} = ?`).join(', ');
         const values = keys.map(k => {
             const val = (task as any)[k];
-            if (k === 'is_pinned') return val ? 1 : 0;
+            if (typeof val === 'boolean') return val ? 1 : 0;
             if (k === 'tags') return JSON.stringify(val);
             return val;
         });
@@ -234,7 +234,11 @@ export class DatabaseService {
 
     updateSnippet(snippet: Partial<Snippet> & { id: string }) {
         const sets = Object.keys(snippet).filter(k => k !== 'id').map(k => `${k} = ?`).join(', ');
-        const values = Object.keys(snippet).filter(k => k !== 'id').map(k => (snippet as any)[k]);
+        const values = Object.keys(snippet).filter(k => k !== 'id').map(k => {
+            const val = (snippet as any)[k];
+            if (typeof val === 'boolean') return val ? 1 : 0;
+            return val;
+        });
         this.db.prepare(`UPDATE snippets SET ${sets} WHERE id = ?`).run(...values, snippet.id);
     }
 
