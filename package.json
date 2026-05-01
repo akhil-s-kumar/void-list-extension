@@ -1,0 +1,96 @@
+{
+  "name": "void-list-extension",
+  "displayName": "Void List - Local Tasks, Snippets & Focus Mode",
+  "description": "Powerful local-first Todo and Snippet Manager for VS Code. Sync seamlessly with the Void List mobile app.",
+  "version": "0.0.1",
+  "publisher": "IamAkhilSKumar",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IamAkhilSKumar/void-list-extension"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "todo",
+    "snippets",
+    "notes",
+    "offline",
+    "productivity",
+    "tasks",
+    "local first",
+    "focus mode",
+    "developer tools"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "void-list.openSidebar",
+        "title": "Void List: Open Sidebar"
+      },
+      {
+        "command": "void-list.addTask",
+        "title": "Void List: Add Task"
+      },
+      {
+        "command": "void-list.openSnippets",
+        "title": "Void List: Open Snippets"
+      },
+      {
+        "command": "void-list.syncNow",
+        "title": "Void List: Sync Now"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "void-list-sidebar",
+          "title": "Void List",
+          "icon": "assets/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "void-list-sidebar": [
+        {
+          "id": "void-list-view",
+          "name": "Void List",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "18.x",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
+    "@types/qrcode": "^1.5.6",
+    "better-sqlite3": "^12.9.0",
+    "express": "^5.2.1",
+    "qrcode": "^1.5.4",
+    "uuid": "^9.0.1"
+  }
+}
