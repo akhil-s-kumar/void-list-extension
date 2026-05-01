@@ -236,7 +236,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     private async showPairingQR() {
         const ip = this.getLocalIp();
-        const port = 4545;
+        const config = vscode.workspace.getConfiguration('voidList');
+        const port = config.get<number>('syncPort') || 4545;
         let tokenStored = this.db.getSetting('sync_token');
         let token: string;
         if (!tokenStored) {

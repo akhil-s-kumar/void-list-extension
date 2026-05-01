@@ -65,6 +65,16 @@
           "type": "webview"
         }
       ]
+    },
+    "configuration": {
+      "title": "Void List",
+      "properties": {
+        "voidList.syncPort": {
+          "type": "number",
+          "default": 4545,
+          "description": "Port used by Void List to sync with the mobile app locally. Change this if port 4545 is already in use."
+        }
+      }
     }
   },
   "scripts": {

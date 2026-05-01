@@ -8,7 +8,20 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Void List Extension is now active!');
     const db = new DatabaseService(context.globalStorageUri.fsPath);
     const syncServer = new SyncServer(db);
-    syncServer.start();
+    
+    const config = vscode.workspace.getConfiguration('voidList');
+    const port = config.get<number>('syncPort') || 4545;
+    syncServer.start(port);
+
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('voidList.syncPort')) {
+                const newPort = vscode.workspace.getConfiguration('voidList').get<number>('syncPort') || 4545;
+                syncServer.stop();
+                syncServer.start(newPort);
+            }
+        })
+    );
 
     const sidebarProvider = new SidebarProvider(context.extensionUri, db, syncServer);
 
