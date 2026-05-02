@@ -1,13 +1,14 @@
 {
   "name": "void-list-extension",
-  "displayName": "Void List - Local Tasks, Snippets & Focus Mode",
+  "displayName": "Void List - Todo, Snippets & Focus Mode",
   "description": "Powerful local-first Todo and Snippet Manager for VS Code. Sync seamlessly with the Void List mobile app.",
   "version": "0.0.1",
   "publisher": "IamAkhilSKumar",
+  "license": "MIT",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IamAkhilSKumar/void-list-extension"
+    "url": "https://github.com/akhil-s-kumar/void-list-extension"
   },
   "engines": {
     "vscode": "^1.85.0"
